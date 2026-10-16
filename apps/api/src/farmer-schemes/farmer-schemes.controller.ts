@@ -42,9 +42,18 @@ export class FarmerSchemesController {
     return this.farmerSchemesService.getFarmerCountByScheme(schemeId);
   }
 
+  // @Get('count')
+  // getEnrollmentCountByDate(@Query('date') date: string) {
+  //   return this.farmerSchemesService.getEnrollmentCountByDate(date);
+  // }
+
   @Get('count')
-  getEnrollmentCountByDate(@Query('date') date: string) {
-    return this.farmerSchemesService.getEnrollmentCountByDate(date);
+  getEnrollmentCountBySchemeAndDate(
+    @Query('schemeId') schemeId: string,
+    @Query('date') date: string,
+  ) {
+    return this.farmerSchemesService
+      .getEnrollmentCountBySchemeAndDate(schemeId, date);
   }
 
   @Get(':id')

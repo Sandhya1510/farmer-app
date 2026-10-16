@@ -78,9 +78,35 @@ export class FarmerSchemesService {
     };
   }
 
-  async getEnrollmentCountByDate(
+  // async getEnrollmentCountByDate(
+  //   date: string,
+  // ): Promise<{ date: string; totalEnrollments: number }> {
+  //   const parsedDate = new Date(`${date}T00:00:00.000Z`);
+
+  //   if (
+  //     !/^\d{4}-\d{2}-\d{2}$/.test(date) ||
+  //     Number.isNaN(parsedDate.getTime()) ||
+  //     parsedDate.toISOString().slice(0, 10) !== date
+  //   ) {
+  //     throw new BadRequestException('Date must be a valid YYYY-MM-DD date');
+  //   }
+
+  //   const totalEnrollments = await this.farmerSchemeRepository.count({
+  //     where: { enrollmentDate: date },
+  //   });
+
+  //   return { date, totalEnrollments };
+  // }
+
+  async getEnrollmentCountBySchemeAndDate(
+    schemeId: string,
     date: string,
-  ): Promise<{ date: string; totalEnrollments: number }> {
+  ): Promise<{
+    schemeId: string;
+    date: string;
+    totalEnrollments: number;
+  }> {
+    
     const parsedDate = new Date(`${date}T00:00:00.000Z`);
 
     if (
@@ -88,16 +114,37 @@ export class FarmerSchemesService {
       Number.isNaN(parsedDate.getTime()) ||
       parsedDate.toISOString().slice(0, 10) !== date
     ) {
-      throw new BadRequestException('Date must be a valid YYYY-MM-DD date');
+      throw new BadRequestException(
+        'Date must be a valid YYYY-MM-DD date',
+      );
     }
 
-    const totalEnrollments = await this.farmerSchemeRepository.count({
-      where: { enrollmentDate: date },
-    });
+    if (!schemeId?.trim()) {
+      throw new BadRequestException('schemeId is required');
+    }
 
-    return { date, totalEnrollments };
+    // Calculate the next day for
+    const nextDate = new Date(parsedDate);
+    nextDate.setUTCDate(nextDate.getUTCDate() + 1);
+    const endDate = nextDate.toISOString().slice(0, 10);
+
+    const totalEnrollments = await this.farmerSchemeRepository
+      .createQueryBuilder('enrollment')
+      .where('enrollment.schemeId = :schemeId', { schemeId })
+      .andWhere('enrollment.enrollmentDate >= :startDate', {
+        startDate: `${date} 00:00:00`,
+      })
+      .andWhere('enrollment.enrollmentDate < :endDate', {
+        endDate: `${endDate} 00:00:00`,
+      })
+      .getCount();
+
+    return {
+      schemeId,
+      date,
+      totalEnrollments,
+    };
   }
-
   async update(
     id: string,
     dto: UpdateFarmerSchemeDto,
