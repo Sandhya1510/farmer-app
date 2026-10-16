@@ -1,0 +1,17 @@
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: farmer-scheme-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: farmer_app
+      POSTGRES_PASSWORD: farmer_dev_password
+      POSTGRES_DB: farmer_scheme
+    ports:
+      - "15434:5432"
+    volumes:
+      - farmer_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  farmer_postgres_data:
