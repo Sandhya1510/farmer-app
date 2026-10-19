@@ -7,6 +7,7 @@ import { AppService } from './app.service';
 import { FarmersModule } from './farmers/farmers.module';
 import { SchemesModule } from './schemes/schemes.module';
 import { FarmerSchemesModule } from './farmer-schemes/farmer-schemes.module';
+import { StateModule } from './state/state.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { FarmerSchemesModule } from './farmer-schemes/farmer-schemes.module';
     FarmersModule,
     SchemesModule,
     FarmerSchemesModule,
+    StateModule,
   ],
   controllers: [AppController],
   providers: [AppService],

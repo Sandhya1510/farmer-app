@@ -5,6 +5,7 @@ import {
   IsOptional,
   IsString,
   MaxLength,
+  IsUUID,
 } from 'class-validator';
 
 export class CreateFarmerDto {
@@ -23,8 +24,8 @@ export class CreateFarmerDto {
   @MaxLength(100)
   lastName: string;
 
-  @IsIn(['male', 'female'])
-  gender: 'male' | 'female';
+  @IsIn(['male', 'female', 'others'])
+  gender: 'male' | 'female' | 'others';
 
   @IsOptional()
   @IsDateString({ strict: true })
@@ -37,16 +38,19 @@ export class CreateFarmerDto {
 
   @IsOptional()
   @IsString()
-  @MaxLength(250)
+  @MaxLength(255)
   address2?: string;
 
   @IsString()
   @IsNotEmpty()
   @MaxLength(100)
-  districtName: string;
+  localityName: string;
 
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(100)
-  stateName: string;
+  // @IsString()
+  // @IsNotEmpty()
+  // @MaxLength(100)
+  // stateName: string;
+
+    @IsUUID()
+    stateId!: string;
 }

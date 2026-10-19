@@ -31,11 +31,17 @@ export class FarmerScheme {
   scheme: Scheme;
 
   @Column({
-    name: 'enrollment_date',
+    name: 'enrollment_start_date',
     type: 'date',
     default: () => 'CURRENT_DATE',
   })
-  enrollmentDate: string;
+  enrollmentStartDate: string;
+
+   @Column({
+    name: 'enrollment_end_date',
+    type: 'date',
+  })
+  enrollmentEndDate: string;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

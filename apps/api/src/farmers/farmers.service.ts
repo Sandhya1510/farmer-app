@@ -14,11 +14,11 @@ export class FarmersService {
   ) {}
 
   async create(dto: CreateFarmerDto): Promise<Farmer> {
-    const farmerUniqueId = `FARM-${Date.now()}`;
+    // const farmerUniqueId = `FARM-${Date.now()}`;
 
     const farmer = this.farmerRepository.create({
       ...dto,
-      farmerUniqueId,
+      // farmerUniqueId,
     });
 
     return this.farmerRepository.save(farmer);

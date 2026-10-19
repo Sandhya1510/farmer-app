@@ -14,7 +14,7 @@ export class Scheme {
   @Column({ name: 'scheme_name', type: 'varchar', length: 150 })
   schemeName: string;
 
-  @Column({ type: 'text', nullable: true })
+  @Column({ type: 'varchar', length: 1000, nullable: true })
   description: string | null;
 
   @Column({ name: 'start_date', type: 'date' })

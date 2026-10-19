@@ -9,5 +9,9 @@ export class CreateFarmerSchemeDto {
 
   @IsOptional()
   @IsDateString({ strict: true })
-  enrollmentDate?: string;
+  enrollmentStartDate?: string;
+
+  @IsOptional()
+  @IsDateString({ strict: true })
+  enrollmentEndDate?: string;
 }

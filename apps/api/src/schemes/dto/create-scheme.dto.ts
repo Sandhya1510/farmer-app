@@ -14,6 +14,7 @@ export class CreateSchemeDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(1000)
   description?: string;
 
   @IsDateString({ strict: true })
