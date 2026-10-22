@@ -26,10 +26,39 @@ export class SchemesService {
     return this.schemeRepository.save(scheme);
   }
 
-  async findAll(): Promise<Scheme[]> {
-    return this.schemeRepository.find({
+  // async findAll(): Promise<Scheme[]> {
+  //   return this.schemeRepository.find({
+  //     order: { createdAt: 'DESC' },
+  //   });
+  // }
+
+  
+  async findAll(
+    page = 1,
+    limit = 25,
+  ): Promise<{
+    data: Scheme[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
+    const safePage = Math.max(1, Math.floor(page));
+    const safeLimit = Math.min(100, Math.max(1, Math.floor(limit)));
+
+    const [data, total] = await this.schemeRepository.findAndCount({
       order: { createdAt: 'DESC' },
+      skip: (safePage - 1) * safeLimit,
+      take: safeLimit,
     });
+
+    return {
+      data,
+      total,
+      page: safePage,
+      limit: safeLimit,
+      totalPages: Math.ceil(total / safeLimit),
+    };
   }
 
   async findOne(id: string): Promise<Scheme> {

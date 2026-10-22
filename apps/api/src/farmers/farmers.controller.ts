@@ -8,6 +8,9 @@ import {
   Param,
   Patch,
   Post,
+  Query,
+  ParseIntPipe,
+  DefaultValuePipe,
 } from '@nestjs/common';
 
 import { FarmersService } from './farmers.service';
@@ -25,11 +28,18 @@ export class FarmersController {
     return this.farmersService.create(dto);
   }
 
-  @Get()
-  findAll() {
-    return this.farmersService.findAll();
-  }
+  // @Get()
+  // findAll() {
+  //   return this.farmersService.findAll();
+  // }
 
+  @Get()
+  findAll(
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit: number,
+  ) {
+    return this.farmersService.findAll(page, limit);
+  }
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.farmersService.findOne(id);

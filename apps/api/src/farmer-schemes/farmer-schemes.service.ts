@@ -61,14 +61,40 @@ export class FarmerSchemesService {
     return this.farmerSchemeRepository.save(enrollment);
   }
 
-  async findAll(): Promise<FarmerScheme[]> {
-    return this.farmerSchemeRepository.find({
-      relations: {
-        farmer: true,
-        scheme: true,
+  // async findAll(): Promise<FarmerScheme[]> {
+  //   return this.farmerSchemeRepository.find({
+  //     relations: {
+  //       farmer: true,
+  //       scheme: true,
+  //     },
+  //     order: { createdAt: 'DESC' },
+  //   });
+  // }
+
+  async findAll(page = 1, limit = 20) {
+    const safePage = Math.max(1, page);
+    const safeLimit = Math.min(100, Math.max(1, limit));
+
+    const [data, total] =
+      await this.farmerSchemeRepository.findAndCount({
+        relations: {
+          farmer: true,
+          scheme: true,
+        },
+        order: { createdAt: 'DESC', },
+        skip: (safePage - 1) * safeLimit,
+        take: safeLimit,
+      });
+
+    return {
+      data,
+      meta: {
+        total,
+        page: safePage,
+        limit: safeLimit,
+        totalPages: Math.ceil(total / safeLimit),
       },
-      order: { createdAt: 'DESC' },
-    });
+    };
   }
 
   async findOne(id: string): Promise<FarmerScheme> {

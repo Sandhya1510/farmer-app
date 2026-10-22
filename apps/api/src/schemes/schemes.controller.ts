@@ -8,6 +8,9 @@ import {
   Param,
   Patch,
   Post,
+  Query,
+  ParseIntPipe,
+  DefaultValuePipe,
 } from '@nestjs/common';
 
 import { SchemesService } from './schemes.service';
@@ -25,10 +28,20 @@ export class SchemesController {
     return this.schemesService.create(dto);
   }
 
+  // @Get()
+  // findAll() {
+  //   return this.schemesService.findAll();
+  // }
+
+  
   @Get()
-  findAll() {
-    return this.schemesService.findAll();
+  findAll(
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('limit', new DefaultValuePipe(25), ParseIntPipe) limit: number,
+  ) {
+    return this.schemesService.findAll(page, limit);
   }
+
 
   @Get(':id')
   findOne(@Param('id') id: string) {

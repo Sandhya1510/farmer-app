@@ -10,6 +10,8 @@ import {
   Patch,
   Post,
   Query,
+  ParseIntPipe,
+  DefaultValuePipe,
 } from '@nestjs/common';
 
 import { FarmerSchemesService } from './farmer-schemes.service';
@@ -27,9 +29,18 @@ export class FarmerSchemesController {
     return this.farmerSchemesService.create(dto);
   }
 
+  // @Get()
+  // findAll() {
+  //   return this.farmerSchemesService.findAll();
+  // }
+
+  
   @Get()
-  findAll() {
-    return this.farmerSchemesService.findAll();
+  findAll(
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit: number,
+  ) {
+    return this.farmerSchemesService.findAll(page, limit);
   }
 
   @Get('count/farmer/:farmerId')
