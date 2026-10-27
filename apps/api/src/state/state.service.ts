@@ -112,9 +112,20 @@ export class StatesService {
     }
   }
 
-  async remove(id: string): Promise<void> {
+  async remove(id: string): Promise<{ message: string }> {
     const state = await this.findOne(id);
-    await this.statesRepository.remove(state);
+    try{
+      await this.statesRepository.remove(state);
+
+      return { message: 'State deleted successfully' };
+    } catch (error: unknown){
+      if (this.isPostgresError(error, '23503')){
+        throw new ConflictException('Cannot delete this state because it is being used by farmers or other records.');
+      }
+
+      throw error;
+    };
+    
   }
 
   private isPostgresError (

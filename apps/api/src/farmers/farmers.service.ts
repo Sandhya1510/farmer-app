@@ -18,11 +18,14 @@ export class FarmersService {
 
   ) { }
 
-  async create(dto: CreateFarmerDto): Promise<Farmer> {
+  async create(dto: CreateFarmerDto)
+  // : Promise<Farmer>
+   {
     // const farmerUniqueId = `FARM-${Date.now()}`;
 
     const state = await this.stateRepository.findOne({ where: {id: dto.stateId}})
     if(!state){throw new NotFoundException('State not found');}
+
     const { stateId, ...farmerData} = dto;
 
     const farmer = this.farmerRepository.create({
@@ -32,7 +35,11 @@ export class FarmersService {
       state,
     });
 
-    return this.farmerRepository.save(farmer);
+    const savedFarmer = await this.farmerRepository.save(farmer)
+
+    return { ...savedFarmer, stateId: state.id}
+    // return this.farmerRepository.save(farmer);
+
   }
 
   // async findAll(): Promise<Farmer[]> {
@@ -42,21 +49,24 @@ export class FarmersService {
   // }
 
 
-  async findAll(page = 1, limit = 20): Promise<{
-    data: Farmer[];
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-  }> {
+  async findAll(page = 1, limit = 20){
     const safePage = Math.max(1, Math.floor(page));
     const safeLimit = Math.min(100, Math.max(1, Math.floor(limit)));
 
-    const [data, total] = await this.farmerRepository.findAndCount({
+    const [farmers, total] = await this.farmerRepository.findAndCount({
+      relations: {state: true},
       order: { createdAt: 'DESC' },
       skip: (safePage - 1) * safeLimit,
       take: safeLimit,
     });
+
+    const data = farmers.map((farmer) => {
+      const { state, ...farmerData} = farmer;
+      return{
+        ...farmerData,
+        stateId: state.id
+      }
+    })
 
     return {
       data,
@@ -67,16 +77,21 @@ export class FarmersService {
     };
   }
 
-  async findOne(id: string): Promise<Farmer> {
+
+  async findOne(id: string)
+  // : Promise<Farmer> 
+  {
     const farmer = await this.farmerRepository.findOne({
       where: { id },
+      relations: {state: true}
     });
 
     if (!farmer) {
       throw new NotFoundException('Farmer not found');
     }
 
-    return farmer;
+    const { state, ...farmerData} = farmer;
+    return {...farmerData , stateId: state.id};
   }
 
   async update(
@@ -91,7 +106,7 @@ export class FarmersService {
 
   async remove(id: string): Promise<{ message: string }> {
     const farmer = await this.findOne(id);
-    await this.farmerRepository.remove(farmer);
+    await this.farmerRepository.delete(farmer.id);
 
     return { message: 'Farmer deleted successfully' };
   }
