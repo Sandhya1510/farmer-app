@@ -23,7 +23,7 @@ async function bootstrap() {
     .addTag('Farmers', 'Manage farmer records')
     .addTag('States', 'Manage states and union territories')
     .addTag('Schemes', 'Manage government schemes')
-    .addTag('Farmer Schemes', 'Manage farmer enrollments and reports')
+    .addTag('FarmerSchemes', 'Manage farmer enrollments and reports')
     .build();
 
   const document = SwaggerModule.createDocument(app, swaggerConfig);

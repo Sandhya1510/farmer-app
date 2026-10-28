@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
@@ -6,6 +6,7 @@ import { Farmer } from './entities/farmer.entity';
 import { CreateFarmerDto } from './dto/create-farmer.dto';
 import { UpdateFarmerDto } from './dto/update-farmer.dto';
 import { State } from '../state/entities/state.entity';
+import { FarmerScheme } from '../farmer-schemes/entities/farmer-schemes.entity';
 
 @Injectable()
 export class FarmersService {
@@ -15,6 +16,9 @@ export class FarmersService {
 
     @InjectRepository(State)
     private readonly stateRepository: Repository<State>,
+
+    @InjectRepository(FarmerScheme)
+    private readonly farmerSchemeRepository: Repository<FarmerScheme>,
 
   ) { }
 
@@ -106,6 +110,16 @@ export class FarmersService {
 
   async remove(id: string): Promise<{ message: string }> {
     const farmer = await this.findOne(id);
+
+    const enrollmentCount = await this.farmerSchemeRepository.count({
+      where: { farmerId: farmer.id}
+    })
+
+    if ( enrollmentCount > 0){
+      throw new ConflictException(
+        'Can not delete the farmer because scheme enrollment records exist'
+      )
+    }
     await this.farmerRepository.delete(farmer.id);
 
     return { message: 'Farmer deleted successfully' };

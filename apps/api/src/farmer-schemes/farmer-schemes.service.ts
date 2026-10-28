@@ -143,6 +143,7 @@ export class FarmerSchemesService {
     };
   }
 
+  
   async getEnrollmentCountBySchemeAndDate(
     schemeId: string,
     date: string,
@@ -151,7 +152,6 @@ export class FarmerSchemesService {
     date: string;
     totalEnrollments: number;
   }> {
-
     const parsedDate = new Date(`${date}T00:00:00.000Z`);
 
     if (
@@ -164,24 +164,11 @@ export class FarmerSchemesService {
       );
     }
 
-    if (!schemeId?.trim()) {
-      throw new BadRequestException('schemeId is required');
-    }
-
-    // Calculate the next day for chencking the end date
-    const nextDate = new Date(parsedDate);
-    nextDate.setUTCDate(nextDate.getUTCDate() + 1);
-    const endDate = nextDate.toISOString().slice(0, 10);
-
     const totalEnrollments = await this.farmerSchemeRepository
       .createQueryBuilder('enrollment')
       .where('enrollment.schemeId = :schemeId', { schemeId })
-      .andWhere('enrollment.enrollmentDate >= :startDate', {
-        startDate: `${date} 00:00:00`,
-      })
-      .andWhere('enrollment.enrollmentDate < :endDate', {
-        endDate: `${endDate} 00:00:00`,
-      })
+      .andWhere('enrollment.enrollmentStartDate <= :date', { date })
+      .andWhere('enrollment.enrollmentEndDate >= :date', { date })
       .getCount();
 
     return {
@@ -190,6 +177,7 @@ export class FarmerSchemesService {
       totalEnrollments,
     };
   }
+
 
   async getFarmersCountPerSchemeAsOnDate(date: string) {
     // Validate the requested date
