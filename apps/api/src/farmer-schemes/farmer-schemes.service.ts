@@ -37,28 +37,45 @@ export class FarmerSchemesService {
       throw new NotFoundException('Scheme not found');
     }
 
-    if (!scheme.startDate || !scheme.endDate) {
+    if (!scheme.startDate) {
       throw new BadRequestException(
-        'Scheme start date and end date must be configured',
+        'Scheme start date must be configured',
       );
     }
 
-    if (!dto.enrollmentStartDate || !dto.enrollmentEndDate) {
+    if (!dto.enrollmentStartDate) {
       throw new BadRequestException(
-        'Enrollment start date and end date are required',
+        'Enrollment start date is required',
       );
     }
 
-    this.validateEnrollmentPeriod(
-      dto.enrollmentStartDate,
-      dto.enrollmentEndDate,
-      scheme.startDate,
-      scheme.endDate,
-    );
+    const enrollmentEndDate = dto.enrollmentEndDate === undefined ? scheme.endDate : dto.enrollmentEndDate;
 
-    const enrollment = this.farmerSchemeRepository.create(dto);
+    if (enrollmentEndDate !== null) {
+      const enrollmentEnd = this.toDateString(enrollmentEndDate);
+      const schemeStart = this.toDateString(scheme.startDate);
 
-    return this.farmerSchemeRepository.save(enrollment);
+      if (enrollmentEnd < schemeStart) {
+        throw new BadRequestException(
+          'Enrollment end date can not be before scheme start date',
+        );
+      }
+
+      if ( scheme.endDate && enrollmentEnd > this.toDateString(scheme.endDate) ) {
+        throw new BadRequestException(
+          'Enrollment end date can not be after scheme end date',
+        );
+      }
+    }
+  
+    const enrollment = this.farmerSchemeRepository.create({
+      ...dto,
+      enrollmentEndDate
+    });
+
+    const savedEnrollment = await this.farmerSchemeRepository.save(enrollment);
+
+    return savedEnrollment;
   }
 
   // async findAll(): Promise<FarmerScheme[]> {
@@ -143,7 +160,6 @@ export class FarmerSchemesService {
     };
   }
 
-  
   async getEnrollmentCountBySchemeAndDate(
     schemeId: string,
     date: string,
@@ -178,7 +194,6 @@ export class FarmerSchemesService {
     };
   }
 
-
   async getFarmersCountPerSchemeAsOnDate(date: string) {
     // Validate the requested date
     const parsedDate = new Date(`${date}T00:00:00.000Z`);
@@ -202,8 +217,8 @@ export class FarmerSchemesService {
         'COUNT(DISTINCT enrollment.farmerId)',
         'totalFarmers',
       )
-      .where('enrollment.enrollmentStartDate <= :date', { date })
-      .andWhere('enrollment.enrollmentEndDate >= :date', { date })
+      .where('enrollment.enrollmentStartDate <= :date', { date })  // to get the count upto that date
+      // .andWhere('enrollment.enrollmentEndDate >= :date', { date }) // to get the count on that perticular date
       .groupBy('scheme.id')
       .orderBy('scheme.id', 'ASC')
       .getRawMany();
@@ -223,17 +238,11 @@ export class FarmerSchemesService {
   ): Promise<FarmerScheme> {
     const enrollment = await this.findOne(id);
 
-    const enrollmentStartDate =
-      dto.enrollmentStartDate ?? enrollment.enrollmentStartDate;
+    const enrollmentStartDate = dto.enrollmentStartDate ?? enrollment.enrollmentStartDate;
 
-    const enrollmentEndDate =
-      dto.enrollmentEndDate !== undefined
-        ? dto.enrollmentEndDate
-        : enrollment.enrollmentEndDate;
-
-    if (!enrollmentStartDate || !enrollmentEndDate) {
+    if (!enrollmentStartDate) {
       throw new BadRequestException(
-        'Enrollment start date and end date are required',
+        'Enrollment start date is required',
       );
     }
 
@@ -245,20 +254,49 @@ export class FarmerSchemesService {
       throw new NotFoundException('Scheme not found');
     }
 
-    if (!scheme.startDate || !scheme.endDate) {
+    if (!scheme.startDate) {
       throw new BadRequestException(
-        'Scheme start date and end date must be configured',
+        'Scheme start date must be configured',
       );
     }
 
-    this.validateEnrollmentPeriod(
-      enrollmentStartDate,
-      enrollmentEndDate,
-      scheme.startDate,
-      scheme.endDate,
-    );
+    const enrollmentEndDate =
+      dto.enrollmentEndDate === undefined
+        ? scheme.endDate
+        : dto.enrollmentEndDate;
+
+    // Validate the enrollment period only when an end date exists.
+    if (enrollmentEndDate !== null) {
+      this.validateEnrollmentPeriod(
+        enrollmentStartDate,
+        enrollmentEndDate,
+        scheme.startDate,
+        scheme.endDate ?? enrollmentEndDate,
+      );
+    } else {
+      const start = this.toDateString(enrollmentStartDate);
+      const schemeStart = this.toDateString(scheme.startDate);
+
+      if (start < schemeStart) {
+        throw new BadRequestException(
+          'Enrollment start date cannot be before scheme start date',
+        );
+      }
+
+      if (
+        scheme.endDate &&
+        start > this.toDateString(scheme.endDate)
+      ) {
+        throw new BadRequestException(
+          'Enrollment start date cannot be after scheme end date',
+        );
+      }
+    }
 
     Object.assign(enrollment, dto);
+
+    enrollment.enrollmentStartDate = enrollmentStartDate;
+    enrollment.enrollmentEndDate = enrollmentEndDate;
 
     return this.farmerSchemeRepository.save(enrollment);
   }
@@ -282,21 +320,21 @@ export class FarmerSchemesService {
     // Enrollment start must not be after enrollment end.
     if (start > end) {
       throw new BadRequestException(
-        'Enrollment start date cannot be after enrollment end date',
+        'Enrollment start date can not be after enrollment end date',
       );
     }
 
     // Enrollment start must be on or after scheme start.
     if (start < schemeStart) {
       throw new BadRequestException(
-        'Enrollment start date cannot be before scheme start date',
+        'Enrollment start date can not be before scheme start date',
       );
     }
 
     // Enrollment end must be on or before scheme end.
     if (end > schemeEnd) {
       throw new BadRequestException(
-        'Enrollment end date cannot be after scheme end date',
+        'Enrollment end date can not be after scheme end date',
       );
     }
   }

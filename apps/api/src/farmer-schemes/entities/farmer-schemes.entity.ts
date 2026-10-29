@@ -40,8 +40,9 @@ export class FarmerScheme {
    @Column({
     name: 'enrollment_end_date',
     type: 'date',
+    nullable: true,
   })
-  enrollmentEndDate: string;
+  enrollmentEndDate: string | null;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
